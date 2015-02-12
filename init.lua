@@ -113,7 +113,8 @@ do
       end
 
       -- cleanup path
-      self.path = self.path:gsub('^~',os.getenv('HOME'))
+      print ('self.path=' .. self.path)
+      -- self.path = self.path:gsub('^~', os.getenv('HOME'))
 
       -- verify file existence
       if not paths.filep(self.path) then
@@ -153,7 +154,8 @@ do
       if not self[c].path then
          self[c].path = self:mktemppath(c)
       end
-      os.execute('mkdir -p ' .. self[c].path)
+      print ("mkdir " ..  self[c].path:gsub('/','\\'))
+      os.execute('mkdir ' .. self[c].path:gsub('/','\\'))
       return paths.concat(self[c].path ,vid_format .. 'png')
    end
 
@@ -176,7 +178,8 @@ do
          or sys.fstat(self.path) > sys.fstat(sfile)
       then
          -- make disk cache dir
-         os.execute('mkdir -p ' .. where.path)
+	 print ("mkdir " ..  where.path:gsub('/','\\'))
+         os.execute('mkdir  ' .. where.path:gsub('/','\\'))
          -- process video
          if self.path then
             local seek_str = ''
@@ -198,7 +201,7 @@ do
                ' -s ' .. self.width .. 'x' .. self.height ..
                ' -qscale 1' ..
                ' ' .. paths.concat(where.path, where.sformat) ..
-                 ' 2> /dev/null'
+                 ' 2> nul' --/dev/null'
             print(ffmpeg_cmd)
             os.execute(ffmpeg_cmd)
          end
@@ -230,14 +233,14 @@ do
    -- as there are two ways to store, you can't index self[1] directly
    function vid:get_frame(c,i)
       if self.load then
-	 return self[c][i]
+         return self[c][i]
       else
-	 if self.encoding == 'png' then
-	    -- png is loaded in RGBA
-	    return image.load(self[c][i]):narrow(1,1,3)
-	 else
-	    return image.load(self[c][i])
-	 end
+         if self.encoding == 'png' then
+            -- png is loaded in RGBA
+            return image.load(self[c][i]):narrow(1,1,3)
+         else
+            return image.load(self[c][i])
+         end
       end
    end
 
@@ -309,7 +312,8 @@ do
    -- @param path     folder to save the files
    --
    function vid:dump(path)
-      os.execute('mkdir -p ' .. path)
+      print ("mkdir.exe " ..  path:gsub('/','\\'))
+      os.execute('mkdir ' .. path:gsub('/','\\'))
       -- dump pngs
       print('Dumping Frames into '..path..'...')
       local nchannels = self.n_channels
@@ -323,9 +327,10 @@ do
             self.length .. 's_c' ..
             c-1 .. '_' .. self.encoding
          if paths.dirp(lpath) then
-            os.execute('rm -rf ' .. lpath)
+            os.execute('rm -rf ' .. lpath:gsub('/','\\'))
          end
-            os.execute('mkdir -p ' .. lpath)
+	    print ("mkdir.exe " ..  lpath:gsub('/','\\'))
+            os.execute('mkdir  ' .. lpath:gsub('/','\\'))
             for i,frame in ipairs(self[c]) do
                xlua.progress(i,#self[c])
                local ofname = paths.concat(lpath, string.format(format, i))
@@ -371,9 +376,10 @@ do
             self.encoding = fmt
             -- remove if dir exists
             if paths.dirp(self[c].path) then
-               os.execute('rm -rf ' .. self[c].path)
+               os.execute('rm -rf ' .. self[c].path:gsub('/','\\'))
             end
-            os.execute('mkdir -p ' .. self[c].path)
+	    print ("mkdir " ..  self[c].path:gsub('/','\\'))
+            os.execute('mkdir.exe ' .. self[c].path:gsub('/','\\'))
             for i,frame in ipairs(self[c]) do
                xlua.progress(i,#self[c])
                local ofname = paths.concat(self[c].path, string.format(format, i))
@@ -393,12 +399,12 @@ do
          ffmpeg_cmd = (ffmpeg_cmd ..
                        ' -sws_flags neighbor -vf scale=' .. self.zoom .. '*iw:' .. self.zoom .. '*ih -vcodec mjpeg -qscale 1 -an  -newvideo')
       end
-      ffmpeg_cmd = ffmpeg_cmd .. ' 2> /dev/null'
+      ffmpeg_cmd = ffmpeg_cmd .. ' 2> nul --/dev/null'
 
       -- overwrite the file
       if paths.filep(outpath .. '.avi') then
          print('WARNING: ' .. outpath .. '.avi exist and will be overwritten...')
-         os.execute('rm -rf ' .. outpath .. '.avi')
+         os.execute('rm -rf ' .. outpath:gsub('/','\\') .. '.avi')
       end
 
       -- do it
